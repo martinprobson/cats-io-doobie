@@ -1,6 +1,6 @@
 import cats.effect.{IO, IOApp, Resource}
 import cats.implicits.*
-import doobie.ExecutionContexts
+import doobie.{ExecutionContexts, Transactor}
 import doobie.hikari.HikariTransactor
 import net.martinprobson.catsdoobie.example.config.Logging
 import net.martinprobson.catsdoobie.example.model.Pet
@@ -28,19 +28,21 @@ object Main extends IOApp.Simple with Logging {
 //        ce)
     } yield xa
 
-  def run: IO[Unit] = for {
-    petRepository <- DoobiePetRepository(transactor)
+  def run: IO[Unit] = transactor.use { xa => program(xa) }
+
+  def program(xa: Transactor[IO]): IO[Unit] = for {
+    petRepository <- DoobiePetRepository(xa)
     //petRepository <- InMemoryPetRepository.empty
-    //id <- petRepository.addPet(Pet("Fred")) // pool-1
-    //_ <- IO.println(s"id = $id")
-    //pet <- petRepository.getPet(id) // pool-2
-    //_ <- IO.println(pet)
-    //pet3 <- petRepository.getPet(UUID.randomUUID.toString) // pool-3
-    //_ <- IO.println(pet3)
-    //ids <- petRepository.addPets(
-    //  Range(1, 10).map(_.toString).toList.map(name => Pet(name))
-    //) // pool-4
-    //_ <- IO.println(s"ids = $ids")
+    id <- petRepository.addPet(Pet("Fred")) // pool-1
+    _ <- IO.println(s"id = $id")
+    pet <- petRepository.getPet(id) // pool-2
+    _ <- IO.println(pet)
+    pet3 <- petRepository.getPet(UUID.randomUUID.toString) // pool-3
+    _ <- IO.println(pet3)
+    ids <- petRepository.addPets(
+      Range(1, 10).map(_.toString).toList.map(name => Pet(name))
+    ) // pool-4
+    _ <- IO.println(s"ids = $ids")
     _ <- {
       val a = List(
         petRepository.addPets(
@@ -61,7 +63,7 @@ object Main extends IOApp.Simple with Logging {
       )
       a.parSequence_
     }
-    //count <- petRepository.countPets // pool-10
-    //_ <- IO.println(s"Total number: $count")
+    count <- petRepository.countPets // pool-10
+    _ <- IO.println(s"Total number: $count")
   } yield ()
 }
