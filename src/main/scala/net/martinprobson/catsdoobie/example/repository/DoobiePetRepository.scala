@@ -1,7 +1,7 @@
 package net.martinprobson.catsdoobie.example.repository
 
-import net.martinprobson.catsdoobie.example.model.{Pet, PetWithId}
-import net.martinprobson.catsdoobie.example.model.PetWithId.ID
+import net.martinprobson.catsdoobie.example.model.Pet
+import net.martinprobson.catsdoobie.example.model.Pet.PET_ID
 
 import doobie.*
 import doobie.implicits.*
@@ -9,40 +9,52 @@ import doobie.implicits.*
 import cats.effect.*
 import cats.syntax.all.*
 
-class DoobiePetRepository(xa: Transactor[IO]) extends PetRepository {
+class DoobiePetRepository(xa: Transactor[IO], ownerRepository: IO[OwnerRepository])
+    extends PetRepository {
 
-  private def insert(xa: Transactor[IO], pet: Pet): IO[ID] = for {
-    //_ <- IO.println(s"insert: ${Thread.currentThread.getName}")
+  private def insert(pet: Pet): IO[PET_ID] = for {
     id <- generateId
-    _ <- sql"INSERT INTO pet (id, name) VALUES ($id, ${pet.name})".update.run.transact(xa)
+    owner <- ownerRepository.flatMap(or => or.getOrAdd(pet.owner))
+    _ <- sql"INSERT INTO pet (id, name, owner_id) VALUES ($id, ${pet.name}, ${owner.id})".update.run
+      .transact(xa)
   } yield id
 
-  private def select(id: ID): ConnectionIO[Option[PetWithId]] =
-    sql"SELECT id, name FROM pet WHERE id = $id".query[PetWithId].option
+  private def select(id: PET_ID): ConnectionIO[Option[Pet]] =
+    sql"""SELECT p.id,
+                 p.name,
+                 o.id,
+                 o.name 
+          FROM   pet p 
+          JOIN   owner o ON p.owner_id = o.id 
+          WHERE  p.id = $id""".query[Pet].option
 
   private def selectCount: ConnectionIO[Long] =
     sql"SELECT COUNT(*) FROM pet".query[Long].unique
 
-  private def selectByName(name: String): ConnectionIO[List[PetWithId]] =
+  private def selectByName(name: String): ConnectionIO[List[Pet]] =
     sql"SELECT id, name FROM pet WHERE name = $name"
-      .query[PetWithId]
+      .query[Pet]
       .stream
       .compile
       .toList
 
-  private def selectAll: ConnectionIO[List[PetWithId]] =
-    sql"SELECT id, name FROM pet".query[PetWithId].stream.compile.toList
+  private def selectAll: ConnectionIO[List[Pet]] =
+    sql"""SELECT p.id,
+                 p.name,
+                 o.id,
+                 o.name 
+          FROM   pet p 
+          JOIN   owner o ON p.owner_id = o.id""".query[Pet].stream.compile.toList
 
-  def addPet(pet: Pet): IO[ID] = insert(xa, pet)
+  def addPet(pet: Pet): IO[PET_ID] = insert(pet)
 
-  //def addPets(pets: List[Pet]): IO[List[ID]] = pets.traverse(pet => addPet(pet))
-  def addPets(pets: List[Pet]): IO[List[ID]] = pets.traverse(pet => insert(xa, pet))
+  def addPets(pets: List[Pet]): IO[List[PET_ID]] = pets.traverse(insert)
 
-  def getPet(id: ID): IO[Option[PetWithId]] = select(id).transact(xa)
+  def getPet(id: PET_ID): IO[Option[Pet]] = select(id).transact(xa)
 
-  def getPetByName(name: String): IO[List[PetWithId]] = selectByName(name).transact(xa)
+  def getPetByName(name: String): IO[List[Pet]] = selectByName(name).transact(xa)
 
-  def getPets: IO[Seq[PetWithId]] = selectAll.transact(xa)
+  def getPets: IO[List[Pet]] = selectAll.transact(xa)
 
   def countPets: IO[Long] = selectCount.transact(xa)
 
@@ -50,5 +62,5 @@ class DoobiePetRepository(xa: Transactor[IO]) extends PetRepository {
 
 object DoobiePetRepository {
   def apply(xa: Transactor[IO]): IO[DoobiePetRepository] =
-    IO(new DoobiePetRepository(xa))
+    IO(new DoobiePetRepository(xa, DoobieOwnerRepository(xa)))
 }

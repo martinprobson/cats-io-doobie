@@ -1,12 +1,9 @@
 import cats.effect.{IO, IOApp, Resource}
-import cats.implicits.*
-import doobie.{ExecutionContexts, Transactor}
 import doobie.hikari.HikariTransactor
+import doobie.{ExecutionContexts, Transactor}
 import net.martinprobson.catsdoobie.example.config.Logging
-import net.martinprobson.catsdoobie.example.model.Pet
-import net.martinprobson.catsdoobie.example.repository.{DoobiePetRepository, InMemoryPetRepository}
-
-import java.util.UUID
+import net.martinprobson.catsdoobie.example.model.{Owner, Pet}
+import net.martinprobson.catsdoobie.example.repository.PetStoreRepository
 
 object Main extends IOApp.Simple with Logging {
 
@@ -25,45 +22,20 @@ object Main extends IOApp.Simple with Logging {
 //        "jdbc:h2:mem:db;DB_CLOSE_DELAY=-1",
 //        "sa",
 //        "sa",
-//        ce)
+//        ce
+//      )
     } yield xa
 
   def run: IO[Unit] = transactor.use { xa => program(xa) }
 
   def program(xa: Transactor[IO]): IO[Unit] = for {
-    petRepository <- DoobiePetRepository(xa)
-    //petRepository <- InMemoryPetRepository.empty
-    id <- petRepository.addPet(Pet("Fred")) // pool-1
-    _ <- IO.println(s"id = $id")
-    pet <- petRepository.getPet(id) // pool-2
-    _ <- IO.println(pet)
-    pet3 <- petRepository.getPet(UUID.randomUUID.toString) // pool-3
-    _ <- IO.println(pet3)
-    ids <- petRepository.addPets(
-      Range(1, 10).map(_.toString).toList.map(name => Pet(name))
-    ) // pool-4
-    _ <- IO.println(s"ids = $ids")
-    _ <- {
-      val a = List(
-        petRepository.addPets(
-          Range(1, 2000).map(_.toString).toList.map(name => Pet(name))
-        ), // pool-5
-        petRepository.addPets(
-          Range(1, 2000).map(_.toString).toList.map(name => Pet(name))
-        ), // pool-6
-        petRepository.addPets(
-          Range(1, 2000).map(_.toString).toList.map(name => Pet(name))
-        ), // pool-7
-        petRepository.addPets(
-          Range(1, 2000).map(_.toString).toList.map(name => Pet(name))
-        ), // pool-8
-        petRepository.addPets(
-          Range(1, 2000).map(_.toString).toList.map(name => Pet(name))
-        ) // pool-9
-      )
-      a.parSequence_
-    }
-    count <- petRepository.countPets // pool-10
-    _ <- IO.println(s"Total number: $count")
+    petStoreRepository <- PetStoreRepository.doobiePetStoreRepository(xa)
+    _ <- petStoreRepository.addPet(Pet("Hammy1", Owner("Hammy's owner 2")))
+    _ <- petStoreRepository.addPet(Pet("Hammy2", Owner("Hammy's owner 2")))
+    _ <- petStoreRepository.addPet(Pet("Hammy3", Owner("Hammy's owner 30")))
+    pets <- petStoreRepository.getPets
+    _ <- IO(pets.foreach(println))
+    owners <- petStoreRepository.getOwners
+    _ <- IO(owners.foreach(println))
   } yield ()
 }

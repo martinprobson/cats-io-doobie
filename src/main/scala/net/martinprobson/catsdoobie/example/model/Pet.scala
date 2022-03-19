@@ -1,10 +1,16 @@
 package net.martinprobson.catsdoobie.example.model
 
-import net.martinprobson.catsdoobie.example.model.PetWithId.ID
+import net.martinprobson.catsdoobie.example.model.Pet.PET_ID
 
-case class Pet(name: String)
-case class PetWithId(id: ID, name: String)
+case class Pet(id: PET_ID, name: String, owner: Owner)
 
-object PetWithId {
-  type ID = String
+object Pet {
+
+  def apply(id: PET_ID, name: String, owner: Owner): Pet = new Pet(id, name, owner)
+
+  def apply(name: String, owner: Owner): Pet = new Pet(UNASSIGNED_PET_ID, name, owner)
+
+  type PET_ID = String
+
+  val UNASSIGNED_PET_ID = ""
 }
