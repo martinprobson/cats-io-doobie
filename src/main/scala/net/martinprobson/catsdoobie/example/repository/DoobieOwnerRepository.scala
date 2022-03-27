@@ -40,6 +40,16 @@ class DoobieOwnerRepository(xa: Transactor[IO]) extends OwnerRepository {
   override def getOwners: IO[List[Owner]] = selectAll.transact(xa)
 
   override def countOwners: IO[Long] = selectCount.transact(xa)
+
+  def createTable: IO[Int] =
+    sql"""
+         |create table if not exists owner
+         |(
+         |    id   int auto_increment
+         |        primary key,
+         |    name varchar(100) null
+         |);
+         |""".stripMargin.update.run.transact(xa)
 }
 
 object DoobieOwnerRepository {

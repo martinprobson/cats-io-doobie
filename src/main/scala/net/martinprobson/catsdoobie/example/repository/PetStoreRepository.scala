@@ -1,6 +1,7 @@
 package net.martinprobson.catsdoobie.example.repository
 import cats.effect.IO
 import doobie.Transactor
+import doobie.implicits.toSqlInterpolator
 import net.martinprobson.catsdoobie.example.model.Owner.OWNER_ID
 import net.martinprobson.catsdoobie.example.model.Pet.PET_ID
 import net.martinprobson.catsdoobie.example.model.{Owner, Pet}
@@ -38,6 +39,7 @@ class PetStoreRepository(petRepository: IO[PetRepository], ownerRepository: IO[O
   override def getOwners: IO[List[Owner]] = ownerRepository.flatMap(_.getOwners)
 
   override def countOwners: IO[Long] = ownerRepository.flatMap(_.countOwners)
+
 }
 
 object PetStoreRepository {
@@ -48,6 +50,8 @@ object PetStoreRepository {
 
   def doobiePetStoreRepository(xa: Transactor[IO]): IO[PetStoreRepository] = for {
     ownerRepository <- DoobieOwnerRepository(xa)
+    _ <- ownerRepository.createTable
     petRepository <- DoobiePetRepository(xa)
+    _ <- petRepository.createTable
   } yield new PetStoreRepository(IO(petRepository), IO(ownerRepository))
 }

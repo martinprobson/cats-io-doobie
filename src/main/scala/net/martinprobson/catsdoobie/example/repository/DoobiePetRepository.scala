@@ -32,11 +32,13 @@ class DoobiePetRepository(xa: Transactor[IO], ownerRepository: IO[OwnerRepositor
     sql"SELECT COUNT(*) FROM pet".query[Long].unique
 
   private def selectByName(name: String): ConnectionIO[List[Pet]] =
-    sql"SELECT id, name FROM pet WHERE name = $name"
-      .query[Pet]
-      .stream
-      .compile
-      .toList
+    sql"""SELECT p.id,
+                 p.name,
+                 o.id,
+                 o.name 
+          FROM   pet p 
+          JOIN   owner o ON p.owner_id = o.id
+          WHERE  p.name = $name""".query[Pet].stream.compile.toList
 
   private def selectAll: ConnectionIO[List[Pet]] =
     sql"""SELECT p.id,
@@ -58,6 +60,16 @@ class DoobiePetRepository(xa: Transactor[IO], ownerRepository: IO[OwnerRepositor
 
   def countPets: IO[Long] = selectCount.transact(xa)
 
+  def createTable: IO[Int] =
+    sql"""
+         |create table if not exists pet
+         |(
+         |    id       varchar(200) not null
+         |        primary key,
+         |    name     varchar(200) null,
+         |    owner_id int          not null
+         |);
+         |""".stripMargin.update.run.transact(xa)
 }
 
 object DoobiePetRepository {

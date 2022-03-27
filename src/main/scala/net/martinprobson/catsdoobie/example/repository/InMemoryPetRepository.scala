@@ -4,6 +4,7 @@ import cats.effect.{IO, Ref}
 import cats.implicits.toTraverseOps
 import net.martinprobson.catsdoobie.example.model.Pet
 import net.martinprobson.catsdoobie.example.model.Pet.PET_ID
+import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 class InMemoryPetRepository(db: Ref[IO, Map[PET_ID, Pet]], ownerRepository: IO[OwnerRepository])
     extends PetRepository {
