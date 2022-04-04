@@ -37,6 +37,6 @@ object InMemoryOwnerRepository {
 
   def empty: IO[OwnerRepository] = for {
     db <- Ref[IO].of(Map.empty[OWNER_ID, Owner])
-    counter <- Ref[IO].of(0)
+    counter <- Ref[IO].of(1000)
   } yield new InMemoryOwnerRepository(db, counter)
 }

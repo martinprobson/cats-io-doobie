@@ -1,4 +1,5 @@
 val doobieVersion = "1.0.0-RC1"
+val scalaTestVersion = "3.2.11"
 
 val doobie = Seq(
   "org.tpolecat" %% "doobie-core" % doobieVersion,
@@ -17,8 +18,9 @@ val logging = Seq(
 )
 
 val test = Seq(
-  "org.typelevel" %% "cats-effect-testing-scalatest" % "1.4.0",
-  "org.scalatest" %% "scalatest" % "3.2.11" % Test
+  "org.typelevel" %% "cats-effect-testing-scalatest" % "1.4.0" % Test,
+  "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
+  "org.scalatest" %% "scalatest-flatspec" % scalaTestVersion % Test
 )
 
 val config =

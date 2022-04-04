@@ -7,9 +7,10 @@ import org.scalatest.funsuite.AsyncFunSuite
 import org.scalatest.matchers.should.Matchers.convertToAnyShouldWrapper
 
 class PetStoreRepositoryTests extends AsyncFunSuite with AsyncIOSpec {
+
   test("countPets <> 0") {
     (for {
-      petStoreRepository <- PetStoreRepository.inMemoryPetStoreReposiory
+      petStoreRepository <- PetStoreRepository.inMemoryPetStoreRepository
       _ <- petStoreRepository.addPet(Pet("Pet1", Owner("Owner 1")))
       _ <- petStoreRepository.addPet(Pet("Pet2", Owner("Owner 1")))
       _ <- petStoreRepository.addPet(Pet("Pet3", Owner("Owner 1")))
@@ -19,14 +20,14 @@ class PetStoreRepositoryTests extends AsyncFunSuite with AsyncIOSpec {
 
   test("countPets == 0") {
     (for {
-      petStoreRepository <- PetStoreRepository.inMemoryPetStoreReposiory
+      petStoreRepository <- PetStoreRepository.inMemoryPetStoreRepository
       count <- petStoreRepository.countPets
     } yield count).asserting(_ shouldBe 0)
   }
 
   test("addPet/getPet") {
     (for {
-      petStoreRepository <- PetStoreRepository.inMemoryPetStoreReposiory
+      petStoreRepository <- PetStoreRepository.inMemoryPetStoreRepository
       id <- petStoreRepository.addPet(Pet("Pet1", Owner("Owner 1")))
       pet <- petStoreRepository.getPet(id)
       owner <- petStoreRepository.getOwner(1)
@@ -38,7 +39,7 @@ class PetStoreRepositoryTests extends AsyncFunSuite with AsyncIOSpec {
 
   test("addPets") {
     (for {
-      petStoreRepository <- PetStoreRepository.inMemoryPetStoreReposiory
+      petStoreRepository <- PetStoreRepository.inMemoryPetStoreRepository
       _ <- petStoreRepository.addPet(Pet("Pet1", Owner("Owner 1")))
       _ <- petStoreRepository.addPet(Pet("Pet2", Owner("Owner 1")))
       _ <- petStoreRepository.addPet(Pet("Pet3", Owner("Owner 1")))
@@ -49,8 +50,8 @@ class PetStoreRepositoryTests extends AsyncFunSuite with AsyncIOSpec {
 
   test("addPet/getPetByName/getOwnerByName") {
     (for {
-      petStoreRepository <- PetStoreRepository.inMemoryPetStoreReposiory
-      id <- petStoreRepository.addPet(Pet("Pet1", Owner("Owner 1")))
+      petStoreRepository <- PetStoreRepository.inMemoryPetStoreRepository
+      _ <- petStoreRepository.addPet(Pet("Pet1", Owner("Owner 1")))
       pet <- petStoreRepository.getPetByName("Pet1")
       owner <- petStoreRepository.getOwnerByName("Owner 1")
     } yield (pet, owner)).asserting {
@@ -61,7 +62,7 @@ class PetStoreRepositoryTests extends AsyncFunSuite with AsyncIOSpec {
 
   test("getPets") {
     (for {
-      petStoreRepository <- PetStoreRepository.inMemoryPetStoreReposiory
+      petStoreRepository <- PetStoreRepository.inMemoryPetStoreRepository
       _ <- petStoreRepository.addPet(Pet("Pet1", Owner("Owner 1")))
       _ <- petStoreRepository.addPet(Pet("Pet2", Owner("Owner 1")))
       _ <- petStoreRepository.addPet(Pet("Pet3", Owner("Owner 1")))

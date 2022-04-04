@@ -5,6 +5,8 @@ import net.martinprobson.catsdoobie.example.config.{Config, Logging}
 import net.martinprobson.catsdoobie.example.model.{Owner, Pet}
 import net.martinprobson.catsdoobie.example.repository.PetStoreRepository
 import org.typelevel.log4cats.slf4j.Slf4jLogger
+import cats.instances.list.*
+import cats.syntax.parallel.*
 
 object Main extends IOApp.Simple with Logging {
 
@@ -37,20 +39,20 @@ object Main extends IOApp.Simple with Logging {
         )
     } yield xa
 
+  //** Exercise our code by added some Pets/Owners in parallel.
   private def program(xa: Transactor[IO]): IO[Unit] = for {
     logger <- Slf4jLogger.create[IO]
     _ <- logger.info("Starting")
-    petStoreRepository <- PetStoreRepository.doobiePetStoreRepository(xa)
-    //petStoreRepository <- PetStoreRepository.inMemoryPetStoreReposiory
-    _ <- petStoreRepository.addPet(Pet("Hammy1", Owner("Hammy's owner 2")))
-    _ <- petStoreRepository.addPet(Pet("Hammy2", Owner("Hammy's owner 2")))
-    _ <- petStoreRepository.addPet(Pet("Hammy3", Owner("Hammy's owner 30")))
-    _ <- petStoreRepository.addPet(Pet("Hammy4", Owner("Hammy's owner 2")))
-    _ <- petStoreRepository.addPet(Pet("Hammy5", Owner("Hammy's owner 2")))
-    _ <- petStoreRepository.addPet(Pet("Hammy6", Owner("Hammy's owner 30")))
+    //petStoreRepository <- PetStoreRepository.doobiePetStoreRepository(xa)
+    petStoreRepository <- PetStoreRepository.inMemoryPetStoreRepository
+    _ <- Range(1, 30000).toList
+      .parTraverse { i =>
+        petStoreRepository.addPet(Pet(s"Name $i", Owner(s"Pet $i's owner")))
+      }
     pets <- petStoreRepository.getPets
     _ <- IO(pets.foreach(println))
-    owners <- petStoreRepository.getOwners
-    _ <- IO(owners.foreach(println))
+    ownerCount <- petStoreRepository.countOwners
+    petCount <- petStoreRepository.countPets
+    _ <- IO.println(s"Total Pets = $petCount, total Owners = $ownerCount")
   } yield ()
 }
