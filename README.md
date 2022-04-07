@@ -1,15 +1,11 @@
 
-CATS Effect with Doobie - A Simple Example
+CATS Effect with Doobie - Example
 ==============================
 
-# Introduction
-
-
-
-This archive contains a template Sbt project for a Scala application. It includes [Scala Style](http://www.scalastyle.org/)
-and [Scala format](https://scalameta.org/scalafmt/) configuration as well as the [Type safe configuration library](https://github.com/lightbend/config)
-and [Logback logging](https://logback.qos.ch/).
-
+# Summary
+This repo contains an example SQL repository that is built using the 
+[CATS Effect IO type](https://typelevel.org/cats-effect/) and 
+the [Doobie SQL library](https://tpolecat.github.io/doobie/index.html).
 
 ![alt text](PetStore.png)
 

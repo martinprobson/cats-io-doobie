@@ -19,11 +19,11 @@ object Main extends IOApp.Simple with Logging {
   override def run: IO[Unit] = transactor(Resource.eval[IO, Config](Config.loadConfig))
     .use { xa => program(xa) }
 
-  /** Setup a HikariTransactor connectin pool.
+  /** Setup a HikariTransactor connection pool.
     * @param config
-    *   - Config contained db connection parameters.
+    *   Config containing db connection parameters.
     * @return
-    *   A Resource containing a HikariTransactior.
+    *   A Resource containing a HikariTransactor.
     */
   private def transactor(config: Resource[IO, Config]): Resource[IO, HikariTransactor[IO]] =
     for {
@@ -43,9 +43,9 @@ object Main extends IOApp.Simple with Logging {
   private def program(xa: Transactor[IO]): IO[Unit] = for {
     logger <- Slf4jLogger.create[IO]
     _ <- logger.info("Starting")
-    //petStoreRepository <- PetStoreRepository.doobiePetStoreRepository(xa)
-    petStoreRepository <- PetStoreRepository.inMemoryPetStoreRepository
-    _ <- Range(1, 30000).toList
+    petStoreRepository <- PetStoreRepository.doobiePetStoreRepository(xa)
+    //petStoreRepository <- PetStoreRepository.inMemoryPetStoreRepository
+    _ <- Range(1, 300).toList
       .parTraverse { i =>
         petStoreRepository.addPet(Pet(s"Name $i", Owner(s"Pet $i's owner")))
       }
