@@ -31,6 +31,10 @@ class InMemoryPetRepository(db: Ref[IO, Map[PET_ID, Pet]], ownerRepository: IO[O
     pets.map { case (id, pet) => Pet(id, pet.name, pet.owner) }.toList
   }
 
+  override def getPets(limit: Int): IO[List[Pet]] = db.get.map { pets =>
+    pets.map { case (id, pet) => Pet(id, pet.name, pet.owner) }.toList.take(limit)
+  }
+
   override def countPets: IO[Long] = db.get.flatMap { pets => IO(pets.size.toLong) }
 }
 

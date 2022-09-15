@@ -13,5 +13,8 @@ trait PetRepository {
   def getPet(id: PET_ID): IO[Option[Pet]]
   def getPetByName(name: String): IO[List[Pet]]
   def getPets: IO[List[Pet]]
+
+  def getPets(limit: Int): IO[List[Pet]]
+
   def countPets: IO[Long]
 }

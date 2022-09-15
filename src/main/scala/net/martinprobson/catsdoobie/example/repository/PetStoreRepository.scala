@@ -27,6 +27,8 @@ class PetStoreRepository(petRepository: IO[PetRepository], ownerRepository: IO[O
 
   def getPets: IO[List[Pet]] = petRepository.flatMap(_.getPets)
 
+  def getPets(limit: Int): IO[List[Pet]] = petRepository.flatMap(_.getPets(limit))
+
   def countPets: IO[Long] = petRepository.flatMap(_.countPets)
 
   def addOwner(owner: Owner): IO[OWNER_ID] =

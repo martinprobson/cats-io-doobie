@@ -2,12 +2,11 @@ package net.martinprobson.catsdoobie.example.repository
 
 import net.martinprobson.catsdoobie.example.model.Pet
 import net.martinprobson.catsdoobie.example.model.Pet.PET_ID
-
 import doobie.*
 import doobie.implicits.*
-
 import cats.effect.*
 import cats.syntax.all.*
+import fs2.Stream
 
 class DoobiePetRepository(xa: Transactor[IO], ownerRepository: IO[OwnerRepository])
     extends PetRepository {
@@ -23,9 +22,9 @@ class DoobiePetRepository(xa: Transactor[IO], ownerRepository: IO[OwnerRepositor
     sql"""SELECT p.id,
                  p.name,
                  o.id,
-                 o.name 
-          FROM   pet p 
-          JOIN   owner o ON p.owner_id = o.id 
+                 o.name
+          FROM   pet p
+          JOIN   owner o ON p.owner_id = o.id
           WHERE  p.id = $id""".query[Pet].option
 
   private def selectCount: ConnectionIO[Long] =
@@ -35,8 +34,8 @@ class DoobiePetRepository(xa: Transactor[IO], ownerRepository: IO[OwnerRepositor
     sql"""SELECT p.id,
                  p.name,
                  o.id,
-                 o.name 
-          FROM   pet p 
+                 o.name
+          FROM   pet p
           JOIN   owner o ON p.owner_id = o.id
           WHERE  p.name = $name""".query[Pet].stream.compile.toList
 
@@ -44,9 +43,17 @@ class DoobiePetRepository(xa: Transactor[IO], ownerRepository: IO[OwnerRepositor
     sql"""SELECT p.id,
                  p.name,
                  o.id,
-                 o.name 
-          FROM   pet p 
+                 o.name
+          FROM   pet p
           JOIN   owner o ON p.owner_id = o.id""".query[Pet].stream.compile.toList
+
+  def selectLimit(limit: Int): ConnectionIO[List[Pet]] =
+    sql"""SELECT p.id,
+                 p.name,
+                 o.id,
+                 o.name
+          FROM   pet p
+          JOIN   owner o ON p.owner_id = o.id""".query[Pet].stream.take(limit).compile.toList
 
   def addPet(pet: Pet): IO[PET_ID] = insert(pet)
 
@@ -57,6 +64,8 @@ class DoobiePetRepository(xa: Transactor[IO], ownerRepository: IO[OwnerRepositor
   def getPetByName(name: String): IO[List[Pet]] = selectByName(name).transact(xa)
 
   def getPets: IO[List[Pet]] = selectAll.transact(xa)
+
+  def getPets(limit: Int): IO[List[Pet]] = selectLimit(limit).transact(xa)
 
   def countPets: IO[Long] = selectCount.transact(xa)
 

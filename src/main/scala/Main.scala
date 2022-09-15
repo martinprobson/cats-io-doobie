@@ -45,11 +45,13 @@ object Main extends IOApp.Simple with Logging {
     _ <- logger.info("Starting")
     petStoreRepository <- PetStoreRepository.doobiePetStoreRepository(xa)
     //petStoreRepository <- PetStoreRepository.inMemoryPetStoreRepository
-    _ <- Range(1, 300).toList
+    _ <- Range
+      .inclusive(1, 300)
+      .toList
       .parTraverse { i =>
         petStoreRepository.addPet(Pet(s"Name $i", Owner(s"Pet $i's owner")))
       }
-    pets <- petStoreRepository.getPets
+    pets <- petStoreRepository.getPets(2)
     _ <- IO(pets.foreach(println))
     ownerCount <- petStoreRepository.countOwners
     petCount <- petStoreRepository.countPets
