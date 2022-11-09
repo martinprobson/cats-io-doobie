@@ -8,13 +8,11 @@ import org.typelevel.log4cats.slf4j.Slf4jLogger
 
 class PetStoreRepository(petRepository: IO[PetRepository], ownerRepository: IO[OwnerRepository]) {
 
-  //def addPet(pet: Pet): IO[PET_ID] = petRepository.flatMap(_.addPet(pet))
-
   def addPet(pet: Pet): IO[PET_ID] = for {
     logger <- Slf4jLogger.create[IO]
-    _ <- logger.info(s"In addPet")
     p <- petRepository
     id <- p.addPet(pet)
+    _ <- logger.info(s"Added Pet.id = $id")
   } yield id
 
   def addPets(pets: List[Pet]): IO[List[PET_ID]] =

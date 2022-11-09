@@ -1,8 +1,8 @@
 package net.martinprobson.catsdoobie.example.config
 
-import pureconfig.*
-import pureconfig.generic.auto.*
-import pureconfig.module.catseffect.syntax.*
+import pureconfig._
+import pureconfig.generic.auto._
+import pureconfig.module.catseffect.syntax._
 import cats.effect.IO
 
 case class Config(threads: Int, jdbc: Jdbc)

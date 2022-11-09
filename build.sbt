@@ -11,10 +11,8 @@ val db = Seq("mysql" % "mysql-connector-java" % "8.0.22", "com.h2database" % "h2
 val cats = Seq("org.typelevel" %% "cats-effect" % "3.3.6")
 
 val logging = Seq(
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.4",
-  "ch.qos.logback" % "logback-classic" % "1.3.0-alpha10",
-  "ch.qos.logback" % "logback-core" % "1.3.0-alpha10",
-  "org.typelevel" %% "log4cats-slf4j" % "2.2.0"
+  "ch.qos.logback" % "logback-classic" % "1.2.11" % Runtime,
+  "org.typelevel" %% "log4cats-slf4j" % "2.5.0"
 )
 
 val test = Seq(
@@ -32,7 +30,6 @@ val config =
   )
 
 lazy val cats_io_doobie = (project in file("."))
-  .enablePlugins(JavaAppPackaging)
   .settings(
     name := "CATS Effect with Doobie Example",
     version := "0.0.1-SNAPSHOT",
@@ -44,16 +41,6 @@ lazy val cats_io_doobie = (project in file("."))
     libraryDependencies ++= db,
     scalaVersion := "2.13.8"
   )
-
-scalacOptions ++= Seq(
-  "-deprecation", // Emit warning and location for usages of deprecated APIs.
-  "-explaintypes", // Explain type errors in more detail.
-  "-Xfatal-warnings", // Fail the compilation if there are any warnings.
-  "-Xsource:3", // Warn for Scala 3 features
-  "-Ywarn-dead-code" // Warn when dead code is identified.
-)
-
-javacOptions ++= Seq("-source", "17", "-target", "17", "-Xlint")
 
 assembly / assemblyMergeStrategy := {
   case PathList("META-INF", xs @ _*)       => MergeStrategy.discard

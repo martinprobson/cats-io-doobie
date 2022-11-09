@@ -1,14 +1,17 @@
 import cats.effect.{IO, IOApp, Resource}
+import cats.implicits.toTraverseOps
 import doobie.hikari.HikariTransactor
 import doobie.{ExecutionContexts, Transactor}
-import net.martinprobson.catsdoobie.example.config.{Config, Logging}
+import net.martinprobson.catsdoobie.example.config.Config
 import net.martinprobson.catsdoobie.example.model.{Owner, Pet}
 import net.martinprobson.catsdoobie.example.repository.PetStoreRepository
 import org.typelevel.log4cats.slf4j.Slf4jLogger
-import cats.instances.list.*
-import cats.syntax.parallel.*
+import cats.instances.list._
+import cats.syntax.parallel._
+import fs2.{Pure, Stream}
+import org.typelevel.log4cats.SelfAwareStructuredLogger
 
-object Main extends IOApp.Simple with Logging {
+object Main extends IOApp.Simple {
 
   /** This is our main entry point where the code will actually get executed.
     *
@@ -39,19 +42,29 @@ object Main extends IOApp.Simple with Logging {
         )
     } yield xa
 
+  private def petsStream: Stream[Pure,Pet] =
+    Stream
+      .iterate(1)(_+1)
+      .zip(Stream
+        .emits(Seq("Bob","Jane","Bill","Mary","Pete"))
+        .repeat
+        .map(i => Owner(i)))
+      .map{ case (i, owner) => Pet(s"Name-$i", owner)}
+
+
   //** Exercise our code by added some Pets/Owners in parallel.
   private def program(xa: Transactor[IO]): IO[Unit] = for {
     logger <- Slf4jLogger.create[IO]
     _ <- logger.info("Starting")
     petStoreRepository <- PetStoreRepository.doobiePetStoreRepository(xa)
     //petStoreRepository <- PetStoreRepository.inMemoryPetStoreRepository
-    _ <- Range
-      .inclusive(1, 300)
+    _ <- petsStream
+      .take(1000)
       .toList
-      .parTraverse { i =>
-        petStoreRepository.addPet(Pet(s"Name $i", Owner(s"Pet $i's owner")))
+      .traverse { pet =>
+        petStoreRepository.addPet(pet)
       }
-    pets <- petStoreRepository.getPets(2)
+    pets <- petStoreRepository.getPets(200000)
     _ <- IO(pets.foreach(println))
     ownerCount <- petStoreRepository.countOwners
     petCount <- petStoreRepository.countPets

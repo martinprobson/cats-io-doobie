@@ -5,7 +5,7 @@ import cats.implicits.toTraverseOps
 import net.martinprobson.catsdoobie.example.model.Owner.OWNER_ID
 import net.martinprobson.catsdoobie.example.model.Owner
 
-class InMemoryOwnerRepository(db: Ref[IO, Map[OWNER_ID, Owner]], counter: Ref[IO, Int])
+class InMemoryOwnerRepository(db: Ref[IO, Map[OWNER_ID, Owner]], counter: Ref[IO, Long])
     extends OwnerRepository {
 
   override def addOwner(owner: Owner): IO[OWNER_ID] = for {
@@ -37,6 +37,6 @@ object InMemoryOwnerRepository {
 
   def empty: IO[OwnerRepository] = for {
     db <- Ref[IO].of(Map.empty[OWNER_ID, Owner])
-    counter <- Ref[IO].of(0)
+    counter <- Ref[IO].of(0L)
   } yield new InMemoryOwnerRepository(db, counter)
 }

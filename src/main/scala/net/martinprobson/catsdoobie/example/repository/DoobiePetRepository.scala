@@ -2,11 +2,10 @@ package net.martinprobson.catsdoobie.example.repository
 
 import net.martinprobson.catsdoobie.example.model.Pet
 import net.martinprobson.catsdoobie.example.model.Pet.PET_ID
-import doobie.*
-import doobie.implicits.*
-import cats.effect.*
-import cats.syntax.all.*
-import fs2.Stream
+import doobie._
+import doobie.implicits._
+import cats.effect._
+import cats.syntax.all._
 
 class DoobiePetRepository(xa: Transactor[IO], ownerRepository: IO[OwnerRepository])
     extends PetRepository {
@@ -53,7 +52,7 @@ class DoobiePetRepository(xa: Transactor[IO], ownerRepository: IO[OwnerRepositor
                  o.id,
                  o.name
           FROM   pet p
-          JOIN   owner o ON p.owner_id = o.id""".query[Pet].stream.take(limit).compile.toList
+          JOIN   owner o ON p.owner_id = o.id""".query[Pet].stream.take(limit.toLong).compile.toList
 
   def addPet(pet: Pet): IO[PET_ID] = insert(pet)
 

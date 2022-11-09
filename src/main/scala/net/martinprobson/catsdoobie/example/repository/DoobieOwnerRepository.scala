@@ -1,8 +1,8 @@
 package net.martinprobson.catsdoobie.example.repository
-import cats.effect.*
-import cats.syntax.all.*
-import doobie.*
-import doobie.implicits.*
+import cats.effect._
+import cats.syntax.all._
+import doobie._
+import doobie.implicits._
 import net.martinprobson.catsdoobie.example.model.Owner
 import net.martinprobson.catsdoobie.example.model.Owner.OWNER_ID
 
